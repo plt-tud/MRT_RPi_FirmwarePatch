@@ -1,0 +1,52 @@
+#!/bin/bash 
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+export PATH="$PATH:/bin:/usr/bin:/sbin:/usr/sbin"
+echo none  > /sys/class/leds/led0/trigger
+
+if [ ! -f /etc/default/firstboot ]; then
+  # Make sure we can SPI & run our GPIO test program
+  modprobe -r spi_bcm2835
+  /sbin/rpi_testOutputs > /dev/null 2>&1
+  
+  # On some installations, SSH key generation does not work properly and creates zero-sized keys. Detect & repair
+  SSHKEYS_FAULTY=0; 
+  for KEY in /etc/ssh/ssh_host_*; do 
+    SZ=`ls -l $KEY | /usr/bin/awk '{print $5}'`
+    if [ $SZ -eq 0 ]; then 
+        SSHKEYS_FAULTY=1; 
+        break; 
+    fi
+  done
+  if [ ! $SSHKEYS_FAULTY -eq 0 ]; then 
+    ( /bin/rm /etc/ssh/ssh_host_*
+      /usr/sbin/dpkg-reconfigure openssh-server
+      /bin/systemctl restart ssh
+    ) > /dev/null 2>&1
+  fi
+  
+  touch /etc/default/firstboot
+  reboot
+fi
+
+# Required as off 2016; Raspbian Jessy disables SSH by default
+/usr/sbin/update-rc.d ssh enable
+invoke-rc.d ssh restart
+
+if [ -f /usr/bin/setpipw.sh ]; then 
+  /bin/bash /usr/bin/setpipw.sh
+fi
+
+/bin/bash /usr/bin/keepalive.sh &
+
+exit 0
