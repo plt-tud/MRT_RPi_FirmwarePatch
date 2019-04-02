@@ -5,32 +5,10 @@ CONFIGFILE="../../etc/pltscripts.conf"
 
 function getDeviceInfo() {
   SERIAL=`awk '/Serial/ {SN=substr($0,index($0,":")+1); gsub(" ","",SN); print SN; exit}' /proc/cpuinfo`
-  DEVID=`/sbin/ifconfig -a | awk '
-    /wlan0/ {
-      WMAC=substr($0,index($0,"Hardware Adresse")+16);
-      if (length(WMAC) > 20) {
-        WMAC=substr($0,index($0,"HWaddr")+7);
-      }
-      gsub(":","",WMAC);
-      gsub(" ","",WMAC);
-    }
-    /eth0/ {
-      EMAC=substr($0,index($0,"Hardware Adresse")+16);
-      if (length(EMAC) > 20) {
-        EMAC=substr($0,index($0,"HWaddr")+7);
-      }
-      gsub(":","",EMAC);
-      gsub(" ","",EMAC);
-    }
-    END {
-      if (length(EMAC)!=12)
-        EMAC="XXXXXXXXXXXX";
-      if (length(WMAC)!=12)
-        WMAC="YYYYYYYYYYYY";
-      ID=substr(EMAC,5)"-"substr(WMAC,5);
-      print toupper(ID)
-    }
-  '`  # ends awk: DEVID
+  ETHMAC=`ip link show eth0   | awk '/ether/ {gsub(":",""); print substr($2,5,12}'`
+  WLANMAC=`ip link show wlan0 | awk '/ether/ {gsub(":",""); print substr($2,5,12}'`
+  
+  DEVID="${ETHMAC}-${WLANMAC}"
   
   if [ -z $SERIAL ]; then
     SERIAL="000000"
@@ -75,7 +53,7 @@ fi
 while [ : ]; do
   getDeviceInfo
   TMPFILE=`mktemp`
-  for ADAPTER in `/sbin/ifconfig | awk '!/^ / {print $1}'`; do
+  for ADAPTER in `/sbin/ifconfig | awk '!/^ / {gsub(/: *$/,""); print $1}'`; do
     IP=`/sbin/ifconfig | awk '
       /'$ADAPTER'/ {GETIP=1} 
       /inet addr/ {
@@ -92,6 +70,10 @@ while [ : ]; do
       GATEWAY=`/sbin/route -n | awk '/'$ADAPTER'$/ {
         if ($1=="0.0.0.0") { print $2; exit}
       }'`
+    fi
+    
+    if [ -z $GATEWAY ]; then
+      continue
     fi
     
     wget -q "http://$GATEWAY:$CFG_KEEPALIVE_GATEWAY_PORT/registerdev.php?deviceId=$DEVID" -O "$TMPFILE"
