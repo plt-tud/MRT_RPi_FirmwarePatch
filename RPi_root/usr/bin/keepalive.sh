@@ -5,8 +5,8 @@ CONFIGFILE="../../etc/pltscripts.conf"
 
 function getDeviceInfo() {
   SERIAL=`awk '/Serial/ {SN=substr($0,index($0,":")+1); gsub(" ","",SN); print SN; exit}' /proc/cpuinfo`
-  ETHMAC=`ip link show eth0   | awk '/ether/ {gsub(":",""); print substr($2,5,12}'`
-  WLANMAC=`ip link show wlan0 | awk '/ether/ {gsub(":",""); print substr($2,5,12}'`
+  ETHMAC=`ip link show eth0   | awk '/ether/ {gsub(":",""); print substr($2,5,12)}'`
+  WLANMAC=`ip link show wlan0 | awk '/ether/ {gsub(":",""); print substr($2,5,12)}'`
   
   DEVID="${ETHMAC}-${WLANMAC}"
   
