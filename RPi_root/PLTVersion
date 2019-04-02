@@ -10,6 +10,10 @@
 Version: 0.2.2
 
 ### Changelog (non machine-readable information beyond this line)
+
+0.2.3 (02/04/2019):
+  keepalive.sh script updated to work with `ip` and newer version of `ifconfig`.
+
 0.2.2 (18/10/2018):
   SSH Keys would sporadically be 0-sized (interrupted generator?). rc.local now
   detects & fixes the problem at first boot if required.
