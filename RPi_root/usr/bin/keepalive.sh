@@ -53,17 +53,9 @@ fi
 while [ : ]; do
   getDeviceInfo
   TMPFILE=`mktemp`
-  for ADAPTER in `/sbin/ifconfig | awk '!/^ / {gsub(/: *$/,""); print $1}'`; do
-    IP=`/sbin/ifconfig | awk '
-      /'$ADAPTER'/ {GETIP=1} 
-      /inet addr/ {
-        if (GETIP==1) {
-          IP=substr($0,index($0, "inet addr:")+10); 
-          IP=substr(IP,0,index(IP, " ")-1); 
-          print IP; 
-          exit;
-        }
-    }'` # ends awk: IP
+  for ADAPTER in `/bin/ip link | awk '/^[0-9]+:/ {gsub(/:\s?/," "); print $2}'`; do
+    IP=`/bin/ip addr show $ADAPTER | awk '/inet[^6](\/ether)?/ {gsub(/\/.*/, "", $2); print $2}'`
+    
     if [ ! -z $CFG_GATEWAY_IP ]; then
         GATEWAY="$CFG_GATEWAY_IP"
     else
