@@ -7,9 +7,13 @@
 ### DO NOT MANUALLY CHANGE THE VERSION NUMBER
 ###
 
-Version: 0.2.2
+Version: 0.2.4
 
 ### Changelog (non machine-readable information beyond this line)
+
+0.2.4 (08/11/2019):
+  Pre-Implemented sudo wrapper for gdbserver as default gdbserver binary (so we 
+  do not need to instruct anyone on how to implement this path during the lecture)  
 
 0.2.3 (02/04/2019):
   keepalive.sh script updated to work with `ip` and newer version of `ifconfig`.
